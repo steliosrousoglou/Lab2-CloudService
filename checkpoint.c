@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "headers.h"
 
 /*
 	Note: sscanf reads from a char*, so it doesn't consume the input
@@ -27,15 +26,16 @@ typedef struct log_entry_block {
 	uint64_t checksum;
 	// essentially a sequence of log_entry structs
 	char entries[REMAINING_BLOCK];
-}
+} log_entry_block;
 
 // Definition of a 20B log entry
 typedef struct log_entry {
 	uint32_t opcode;
 	uint64_t node_a_id;
 	uint64_t node_b_id;
-}
+} log_entry;
 
 // Calculates and returns the checkwsum
 uint64_t checksum (char* sum) {
+	return 0;
 }
