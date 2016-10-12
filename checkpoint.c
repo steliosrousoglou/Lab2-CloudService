@@ -36,6 +36,6 @@ typedef struct log_entry {
 	uint64_t node_b_id;
 }
 
-// Calculates and returns the checksum
+// Calculates and returns the checkwsum
 uint64_t checksum (char* sum) {
 }

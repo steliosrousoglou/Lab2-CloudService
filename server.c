@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
   // initialize global hashtable "map"
   map.size = 0;
   map.table = malloc(SIZE * sizeof(vertex*));
-  for(int i=0; i<SIZE; i++) (map.table)[i] = NULL;
+  for(int i = 0; i < SIZE; i++) (map.table)[i] = NULL;
 
     for (;;) {
       mg_mgr_poll(&mgr, 1000);
