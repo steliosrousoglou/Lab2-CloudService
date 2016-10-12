@@ -307,13 +307,23 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
 
 int main(int argc, char** argv) {
 
+  bool format = false;
+
   // ensure correct number of arguments
-  if(argc != 2) {
-    fprintf(stderr, "Usage: ./cs426_graph_server <port>\n");
+  if(argc != 3 && argc != 4) {
+    fprintf(stderr, "Usage: ./cs426_graph_server [-f] <port> <devfile>\n");
     return 1;
+  } else if (argc == 4) {
+    if (strcmp(argv[1], "-f")) {
+      fprintf(stderr, "Usage: ./cs426_graph_server [-f] <port> <devfile>\n");
+      return 1;
+    } else {
+      format = true;
+    }
   }
 
-  const char *s_http_port = argv[1];
+  const char *s_http_port = argv[(format? 2 : 1)];
+  const char *devfile = argv[(format? 3 : 2)];
 
   // ensure <port> is a number
   struct mg_mgr mgr;
