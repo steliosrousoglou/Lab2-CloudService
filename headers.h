@@ -11,6 +11,12 @@
 // size of hashtable
 #define SIZE (100000)
 
+// op-codes for log entries
+#define ADD_NODE (0)
+#define ADD_EDGE (1)
+#define REMOVE_NODE (2)
+#define REMOVE_EDGE (3)
+
 /*
 	Hashtable API prototypes
 */
