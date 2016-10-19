@@ -6,7 +6,7 @@ EXE = cs426_graph_server
 HDRS = mongoose.h headers.h
 
 # space-separated list of source files
-SRCS = mongoose.c hashtable.c server.c
+SRCS = mongoose.c hashtable.c checkpoint.c server.c
 
 # automatically generated list of object files
 OBJS = $(SRCS:.c=.o)
