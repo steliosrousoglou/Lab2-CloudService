@@ -171,10 +171,10 @@ size_t write_superblock(int fd, superblock* sup);
 // Returns true if checksum is equal to the XOR of all 8-byte words in superblock
 bool valid_superblock(superblock *block, uint64_t checksum);
 
-// Implements -f (fomrat) functionality
+// Implements -f (fomrat) functionality, returns true upon success
 bool format_superblock(int fd);
 
-// Reads the superblock, checks if it is valid, returns true open success
+// Reads the superblock, checks if it is valid, returns true upon success
 bool normal_startup(int fd);
 
 // Returns number of log entry block that should be written next
