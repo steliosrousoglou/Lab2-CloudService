@@ -114,7 +114,6 @@ void format_superblock(int fd) {
 	free(sup);
 }
 
-/* FOR TESTING PURPOSES ONLY */
 int main(int argc, char** argv) {
 	int fd;
 
