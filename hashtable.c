@@ -343,6 +343,7 @@ int shortest_path(uint64_t id1, uint64_t id2){
 
 }
 
+// Given a valid node_id, returns list of neighbors
 uint64_t *get_neighbors(uint64_t id, int* n){
 	vertex *v = ret_vertex(id);
 	int size = 0;

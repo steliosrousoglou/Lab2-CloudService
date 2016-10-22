@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
   bool format = false;
 
   // ensure correct number of arguments
-  if(argc != 3 && argc != 4) {
+  if (argc != 3 && argc != 4) {
     fprintf(stderr, "Usage: ./cs426_graph_server [-f] <port> <devfile>\n");
     return 1;
   } else if (argc == 4) {
@@ -333,10 +333,13 @@ int main(int argc, char** argv) {
   c = mg_bind(&mgr, s_http_port, ev_handler);
   mg_set_protocol_http_websocket(c);
 
+  // Format option
+  if (format) format_superblock(fd);
+
   // initialize global hashtable "map"
   map.size = 0;
   map.table = malloc(SIZE * sizeof(vertex*));
-  for(int i = 0; i < SIZE; i++) (map.table)[i] = NULL;
+  for (int i = 0; i < SIZE; i++) (map.table)[i] = NULL;
 
     for (;;) {
       mg_mgr_poll(&mgr, 1000);
