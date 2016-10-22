@@ -119,35 +119,38 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
     struct json_token* find_b = find_json_token(tokens, arg_b);
 
     // Sanity check for endpoint length and body not empty
-    if(hm->uri.len < 16 || tokens == NULL) {
+    if (hm->uri.len < 16 || tokens == NULL) {
       badRequest(c);
       return;
     }
 
-    if(!strncmp(hm->uri.p, "/api/v1/add_node", hm->uri.len)) {
+    if (!strncmp(hm->uri.p, "/api/v1/add_node", hm->uri.len)) {
       // body does not contain expected key
-      if(find_id == 0) {
+      if (find_id == 0) {
         badRequest(c);
         return;
       }
 
       // index of value
       int index1 = argument_pos(tokens, arg_id);
-      long long arg_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
+      uint64_t arg_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
 
       // returns true if successfully added
-      if(add_vertex(arg_int)) {
-        response = make_json_one("node_id", 7, arg_int);
-        respond(c, 200, strlen(response), response);
-        free(response);
+      if (add_vertex(arg_int)) {
+	// append operation to log
+	if (add_to_log(ADD_NODE, arg_int, 0)) {
+          response = make_json_one("node_id", 7, arg_int);
+          respond(c, 200, strlen(response), response);
+          free(response);
+	} else respond(c, 507, 0, "");
       } else {
         // vertex already existed
         respond(c, 204, 0, "");
       }
     } 
-    else if(!strncmp(hm->uri.p, "/api/v1/add_edge", hm->uri.len)) {
+    else if (!strncmp(hm->uri.p, "/api/v1/add_edge", hm->uri.len)) {
       // body does not contain expected keys
-      if(find_a == 0 || find_b == 0) {
+      if (find_a == 0 || find_b == 0) {
         badRequest(c);
         return;
       }
@@ -155,8 +158,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
       // index of values
       int index1 = argument_pos(tokens, arg_a);
       int index2 = argument_pos(tokens, arg_b);
-      long long arg_a_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
-      long long arg_b_int = strtoll(tokens[index2 + 1].ptr, &endptr, 10);
+      uint64_t arg_a_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
+      uint64_t arg_b_int = strtoll(tokens[index2 + 1].ptr, &endptr, 10);
 
       // fix incase of things fucking up
       switch (add_edge(arg_a_int, arg_b_int)) {
@@ -165,34 +168,40 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
         case 204:
           respond(c, 204, 0, "");
         case 200:
-          response = make_json_two("node_a_id", "node_b_id", 9, 9, arg_a_int, arg_b_int);
-          respond(c, 200, strlen(response), response);
-          free(response);
+	  // append operation to log
+          if (add_to_log(ADD_EDGE, arg_a_int, arg_b_int)) {
+	    response = make_json_two("node_a_id", "node_b_id", 9, 9, arg_a_int, arg_b_int);
+	    respond(c, 200, strlen(response), response);
+            free(response);
+          } else respond(c, 507, 0, "");
       }
     } 
-    else if(!strncmp(hm->uri.p, "/api/v1/remove_node", hm->uri.len)) {
+    else if (!strncmp(hm->uri.p, "/api/v1/remove_node", hm->uri.len)) {
       // body does not contain expected key
-      if(find_id == 0) {
+      if (find_id == 0) {
         badRequest(c);
         return;
       }
 
       // index of value
       int index1 = argument_pos(tokens, arg_id);
-      long long arg_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
+      uint64_t arg_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
 
       // if node does not exist
-      if(remove_vertex(arg_int)) {
-        response = make_json_one("node_id", 7, arg_int);
-        respond(c, 200, strlen(response), response);
-        free(response);
+      if (remove_vertex(arg_int)) {
+	// append operation to log
+        if (add_to_log(REMOVE_NODE, arg_int, 0)) {
+	  response = make_json_one("node_id", 7, arg_int);
+          respond(c, 200, strlen(response), response);
+          free(response);
+	} else respond(c, 507, 0, "");
       } else {
         respond(c, 400, 0, "");
       }
     } 
-    else if(!strncmp(hm->uri.p, "/api/v1/remove_edge", hm->uri.len)) {
+    else if (!strncmp(hm->uri.p, "/api/v1/remove_edge", hm->uri.len)) {
       // body does not contain expected keys
-      if(find_a == 0 || find_b == 0) {
+      if (find_a == 0 || find_b == 0) {
         badRequest(c);
         return;
       }
@@ -200,14 +209,17 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
       // index of values
       int index1 = argument_pos(tokens, arg_a);
       int index2 = argument_pos(tokens, arg_b);
-      long long arg_a_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
-      long long arg_b_int = strtoll(tokens[index2 + 1].ptr, &endptr, 10);
+      uint64_t arg_a_int = strtoll(tokens[index1 + 1].ptr, &endptr, 10);
+      uint64_t arg_b_int = strtoll(tokens[index2 + 1].ptr, &endptr, 10);
 
       // if edge does not exist
-      if(remove_edge(arg_a_int, arg_b_int)) {
-          response = make_json_two("node_a_id", "node_b_id", 9, 9, arg_a_int, arg_b_int);
+      if (remove_edge(arg_a_int, arg_b_int)) {
+        // append operation to log
+        if (add_to_log(REMOVE_EDGE, arg_a_int, arg_b_int)) {
+	  response = make_json_two("node_a_id", "node_b_id", 9, 9, arg_a_int, arg_b_int);
           respond(c, 200, strlen(response), response);
           free(response);;
+	} else respond(c, 507, 0, "");
       } else {
         respond(c, 400, 0, "");
       }

@@ -177,3 +177,6 @@ bool format_superblock(int fd);
 // Reads the superblock, checks if it is valid, and if so returns generation number (otherwise 0)
 uint64_t normal_startup(int fd);
 
+// Appends most recent mutating command to log, returns true on success
+bool add_to_log(int command, uint64_t arg1, uint64_t arg2);
+

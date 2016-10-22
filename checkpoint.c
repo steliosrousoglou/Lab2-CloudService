@@ -92,6 +92,12 @@ uint64_t normal_startup(int fd) {
 	} else return 0;
 }
 
+// Appends most recent mutating command to log, returns true on success
+bool add_to_log(int command, uint64_t arg1, uint64_t arg2) {
+	// TODO
+	return true;
+}
+
 /*
 // FOR TESTING PURPOSES ONLY
 int main(int argc, char** argv) {
