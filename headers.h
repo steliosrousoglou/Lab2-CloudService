@@ -37,7 +37,6 @@ typedef struct queue{
     struct elt *tail;
 } queue;
 
-
 // edge node definition
 typedef struct edge {
 	uint64_t b;				// adjacent vertex
@@ -115,7 +114,6 @@ void queue_destroy(queue **q);
 
 // Assumes both nodes exist; returns value of shortest path
 int shortest_path(uint64_t id1, uint64_t id2);
-
 // Given a valid node_id, returns list of neighbors
 uint64_t *get_neighbors(uint64_t id, int* n);
 
@@ -128,7 +126,6 @@ uint64_t *get_neighbors(uint64_t id, int* n);
 #define LOG_ENTRY_BLOCK (4000)
 #define LOG_ENTRY_HEADER (16)
 #define LOG_ENTRY (20)
-
 
 // op-codes for log entries
 #define ADD_NODE (0)
@@ -158,28 +155,20 @@ typedef struct log_entry_block_header {
 
 // Returns malloced superblock read from disk
 superblock* get_superblock(int fd);
-
 // Calculates and returns the checksum of the superblock
 uint64_t checksum_superblock(void *bytes);
-
 // Calculates and returns the checksum of the log entry block
 uint64_t checksum_log_entry_block(void *bytes);
-
 // Writes superblock sup to disk
 size_t write_superblock(int fd, superblock* sup);
-
 // Returns true if checksum is equal to the XOR of all 8-byte words in superblock
 bool valid_superblock(superblock *block, uint64_t checksum);
-
 // Implements -f (fomrat) functionality, returns true upon success
 bool format_superblock(int fd);
-
 // Reads the superblock, checks if it is valid, returns true upon success
 bool normal_startup(int fd);
-
 // Returns number of log entry block that should be written next
 uint32_t get_tail(int fd);
-
 // Appends most recent mutating command to log, returns true on success
 bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2);
 
