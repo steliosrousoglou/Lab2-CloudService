@@ -23,27 +23,28 @@
 	Hashtable API prototypes
 */
 
-// size of hashtable
+// Size of hashtable
 #define SIZE (100000)
 
-//Queue for doing BFS and tracking nodes
+// Queue for doing BFS and tracking nodes
 struct elt {
     struct elt *next;
     uint64_t value;
 };
 
+// Definition of queue data structure
 typedef struct queue{
     struct elt *head;
     struct elt *tail;
 } queue;
 
-// edge node definition
+// Edge node definition
 typedef struct edge {
 	uint64_t b;				// adjacent vertex
 	struct edge* next;		// for chaining
 } edge;
 
-// vertex node definition
+// Vertex node definition
 typedef struct vertex {
 	uint64_t id;			// unique id of vertex
 	edge* head; 			// linked list of edges
@@ -51,7 +52,7 @@ typedef struct vertex {
 	int path;
 } vertex;
 
-// vertex hashtable definition
+// Vertex hashtable definition
 typedef struct vertex_map {
 	vertex** table;
 	size_t size;
@@ -140,12 +141,14 @@ typedef struct superblock {
         uint32_t log_start;
         uint32_t log_size;
 } superblock;
+
 // Definition of a 20B log entry
 typedef struct log_entry {
 	uint32_t opcode;
         uint64_t node_a_id;
         uint64_t node_b_id;
 } log_entry;
+
 // Definition of a 4KB log entry block
 typedef struct log_entry_block_header {
         uint64_t checksum;
