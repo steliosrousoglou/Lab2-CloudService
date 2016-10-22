@@ -85,7 +85,7 @@ bool format_superblock(int fd) {
 	if (write_superblock(fd, sup) != SUPERBLOCK) return false;
 }
 
-// Reads the superblock, checks if it is valid, and if so returns generation number (otherwise 0)
+// Reads the superblock, checks if it is valid, and returns true upon success
 bool normal_startup(int fd) {
 	superblock* sup = get_superblock(fd);
 	if (sup == NULL) return false;
