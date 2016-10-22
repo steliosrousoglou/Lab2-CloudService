@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -std=c99 -g3
+CFLAGS = -O2 -std=gnu99 -g3
 EXE = cs426_graph_server
 
 # space-separated list of header files

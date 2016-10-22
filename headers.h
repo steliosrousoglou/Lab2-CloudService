@@ -19,8 +19,6 @@
 #include <getopt.h>
 #include <sys/mman.h>
 
-#define _BSD_SOURCE
-
 /*
 	Hashtable API prototypes
 */
@@ -176,4 +174,6 @@ bool valid_superblock(superblock *block, uint64_t checksum);
 // Implements -f (fomrat) functionality
 bool format_superblock(int fd);
 
+// Reads the superblock, checks if it is valid, and if so returns generation number (otherwise 0)
+uint64_t normal_startup(int fd);
 

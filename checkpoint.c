@@ -10,8 +10,6 @@
 #include <sys/mman.h>
 #include <inttypes.h>
 
-#define _DEFAULT_SOURCE
-
 #include "headers.h"
 
 /*
@@ -23,6 +21,7 @@ superblock* get_superblock(int fd) {
 	lseek(fd, 0, SEEK_SET);
 	superblock* new = mmap(NULL, SUPERBLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 	if (read(fd, new, SUPERBLOCK) != SUPERBLOCK) return NULL;
+	fprintf(stderr, "Reading: generation: %" PRIu32 ", start: %" PRIu32 ", size: %" PRIu32 "\n", new->generation, new->log_start, new->log_size);
 	return new;
 }
 
@@ -58,7 +57,7 @@ size_t write_superblock(int fd, superblock* sup) {
         sup->checksum = checksum_superblock(sup);
 
 	// Debugging
-	fprintf(stderr, "Generation: %" PRIu32 ", start: %" PRIu32 ", size: %" PRIu32 "\n", sup->generation, sup->log_start, sup->log_size);
+	fprintf(stderr, "Writing: generation: %" PRIu32 ", start: %" PRIu32 ", size: %" PRIu32 "\n", sup->generation, sup->log_start, sup->log_size);
 
 	return write(fd, sup, SUPERBLOCK);
 }
@@ -73,7 +72,7 @@ bool format_superblock(int fd) {
 	superblock* sup = get_superblock(fd);
 	if (sup == NULL) return false;
 
-	if(valid_superblock(sup, sup->checksum)) {
+	if (valid_superblock(sup, sup->checksum)) {
 		sup->generation = sup->generation + 1;
 	} else {
 		sup->generation = 0;
@@ -81,7 +80,16 @@ bool format_superblock(int fd) {
 		sup->log_size = 2000000000; // unsure if this is meant to be 2GB always but that's what he said in class
 	}
 	if (write_superblock(fd, sup) != SUPERBLOCK) return false;
-	free(sup);
+}
+
+// Reads the superblock, checks if it is valid, and if so returns generation number (otherwise 0)
+uint64_t normal_startup(int fd) {
+	superblock* sup = get_superblock(fd);
+	if (sup == NULL) return 0;
+
+	if (valid_superblock(sup, sup->checksum)) {
+		return sup->generation;
+	} else return 0;
 }
 
 /*

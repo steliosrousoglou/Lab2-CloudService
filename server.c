@@ -14,7 +14,9 @@
 #include "mongoose.h"
 #include "headers.h"
 
-extern vertex_map map;
+extern vertex_map map;// hashtable storing the graph
+uint64_t generation;  // in-memory generation number
+uint64_t tail;        // in-memory tail of the log
 
 // Responds to given connection with code and length bytes of body
 static void respond(struct mg_connection *c, int code, const int length, const char* body) {
@@ -72,8 +74,8 @@ char* format_neighbors(uint64_t* neighbors, int size) {
   int dummy_length;
 
   for(int i = 0; i < size; i++) {
-    if (i<size-1) sprintf(dummy, "%llu,", neighbors[i]);
-    else sprintf(dummy, "%llu", neighbors[i]);
+    if (i<size-1) sprintf(dummy, "%"PRIu64",", neighbors[i]);
+    else sprintf(dummy, "%"PRIu64"", neighbors[i]);
 
     dummy_length = strlen(dummy);
     response_length += dummy_length;
@@ -307,7 +309,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
 
 int main(int argc, char** argv) {
 
-  bool format = false;
+  bool format = false; 	// format flag specified?
 
   // ensure correct number of arguments
   if (argc != 3 && argc != 4) {
@@ -325,6 +327,11 @@ int main(int argc, char** argv) {
   const char *s_http_port = argv[(format? 2 : 1)];
   const char *devfile = argv[(format? 3 : 2)];
 
+  int fd = open(devfile, O_RDWR);
+  if (fd == -1) {
+    fprintf(stderr, "Unable to open %s. Abort.\n", devfile);
+    return 1;
+  }
   // ensure <port> is a number
   struct mg_mgr mgr;
   struct mg_connection *c;
@@ -334,7 +341,22 @@ int main(int argc, char** argv) {
   mg_set_protocol_http_websocket(c);
 
   // Format option
-  if (format) format_superblock(fd);
+  if (format) {
+    if (format_superblock(fd)) {
+      fprintf(stderr, "Successfully formatted superblock\n");
+    } else {
+      fprintf(stderr, "Failed to format superblock\n");
+      return 1;
+    }
+  } else { // normal startup
+      generation = normal_startup(fd);
+      if (generation == 0) {
+        fprintf(stderr, "Normal startup failed. Abort\n");
+        return 1;
+      } else {
+	// TODO: Alex reads the graph from checkpoint into memory
+      }
+  }
 
   // initialize global hashtable "map"
   map.size = 0;
