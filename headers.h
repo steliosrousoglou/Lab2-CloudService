@@ -126,7 +126,9 @@ uint64_t *get_neighbors(uint64_t id, int* n);
 // Sizes in bytes
 #define SUPERBLOCK (20)
 #define LOG_ENTRY_BLOCK (4000)
-#define REMAINING_BLOCK (3984)
+#define LOG_ENTRY_HEADER (16)
+#define LOG_ENTRY (20)
+
 
 // op-codes for log entries
 #define ADD_NODE (0)
@@ -143,18 +145,16 @@ typedef struct superblock {
 } superblock;
 // Definition of a 20B log entry
 typedef struct log_entry {
+	uint32_t opcode;
         uint64_t node_a_id;
         uint64_t node_b_id;
-        uint32_t opcode;
 } log_entry;
 // Definition of a 4KB log entry block
-typedef struct log_entry_block {
+typedef struct log_entry_block_header {
         uint64_t checksum;
         uint32_t generation;
         uint32_t n_entries;
-        // essentially a sequence of log_entry structs
-        log_entry log_entries[199]; // In every log entry block, (4000 - 16) / 20 = 199.2
-} log_entry_block;
+} log_entry_block_header;
 
 // Returns malloced superblock read from disk
 superblock* get_superblock(int fd);
@@ -174,9 +174,12 @@ bool valid_superblock(superblock *block, uint64_t checksum);
 // Implements -f (fomrat) functionality
 bool format_superblock(int fd);
 
-// Reads the superblock, checks if it is valid, and if so returns generation number (otherwise 0)
-uint64_t normal_startup(int fd);
+// Reads the superblock, checks if it is valid, returns true open success
+bool normal_startup(int fd);
+
+// Returns number of log entry block that should be written next
+uint32_t get_tail(int fd);
 
 // Appends most recent mutating command to log, returns true on success
-bool add_to_log(int command, uint64_t arg1, uint64_t arg2);
+bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2);
 

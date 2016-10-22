@@ -15,8 +15,8 @@
 #include "headers.h"
 
 extern vertex_map map;// hashtable storing the graph
-uint64_t generation;  // in-memory generation number
-uint64_t tail;        // in-memory tail of the log
+extern uint32_t generation;  // in-memory generation number
+extern uint32_t tail;        // in-memory tail of the log
 
 // Responds to given connection with code and length bytes of body
 static void respond(struct mg_connection *c, int code, const int length, const char* body) {
@@ -361,8 +361,7 @@ int main(int argc, char** argv) {
       return 1;
     }
   } else { // normal startup
-      generation = normal_startup(fd);
-      if (generation == 0) {
+      if (!normal_startup(fd)) {
         fprintf(stderr, "Normal startup failed. Abort\n");
         return 1;
       } else {

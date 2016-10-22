@@ -12,9 +12,9 @@
 
 #include "headers.h"
 
-/*
-	Note: sscanf reads from a char*, so it doesn't consume the input
-*/
+// Global in-memory variables
+uint32_t generation;  // in-memory generation number
+uint32_t tail;        // in-memory tail of the log
 
 // Returns malloced superblock read from disk
 superblock* get_superblock(int fd) {
@@ -74,26 +74,42 @@ bool format_superblock(int fd) {
 
 	if (valid_superblock(sup, sup->checksum)) {
 		sup->generation = sup->generation + 1;
+		tail = get_tail(fd);
 	} else {
 		sup->generation = 0;
 		sup->log_start = 1;
 		sup->log_size = 2000000000; // unsure if this is meant to be 2GB always but that's what he said in class
+		tail = 0;
 	}
+	generation = sup->generation;
 	if (write_superblock(fd, sup) != SUPERBLOCK) return false;
 }
 
 // Reads the superblock, checks if it is valid, and if so returns generation number (otherwise 0)
-uint64_t normal_startup(int fd) {
+bool normal_startup(int fd) {
 	superblock* sup = get_superblock(fd);
-	if (sup == NULL) return 0;
+	if (sup == NULL) return false;
 
 	if (valid_superblock(sup, sup->checksum)) {
-		return sup->generation;
-	} else return 0;
+		generation = sup->generation;
+		tail = get_tail(fd);
+		return true;
+	} else return false;
+}
+
+// Returns number of log entry block that should be written next
+uint32_t get_tail(int fd) {
+	//TODO
+	return 0;
 }
 
 // Appends most recent mutating command to log, returns true on success
-bool add_to_log(int command, uint64_t arg1, uint64_t arg2) {
+bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
+	log_entry *new = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+	new->opcode = opcode;
+	new->node_a_id = arg1;
+	new->node_b_id = arg2;
+
 	// TODO
 	return true;
 }
