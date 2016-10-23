@@ -132,6 +132,7 @@ uint64_t *get_neighbors(uint64_t id, int* n);
 #define LOG_ENTRY_HEADER (16)
 #define LOG_ENTRY (20)
 #define LOG_SIZE (2000000000)
+#define N_ENTRIES (499999)
 
 // op-codes for log entries
 #define ADD_NODE (0)
@@ -172,7 +173,7 @@ size_t write_superblock(int fd, superblock* sup);
 // Returns true if checksum is equal to the XOR of all 8-byte words in superblock
 bool valid_superblock(superblock *block, uint64_t checksum);
 // Returns true if checksum is equal to the XOR of all 8-byte words in log entry block
-bool valid_log_entry_block(log_entry_block_header *block, uint64_t checksum);
+bool valid_log_entry_block(void *block, uint64_t checksum);
 // Implements -f (fomrat) functionality, returns true upon success
 bool format_superblock(int fd);
 // Reads the superblock, checks if it is valid, returns true upon success

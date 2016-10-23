@@ -58,7 +58,7 @@ bool valid_superblock(superblock *block, uint64_t checksum) {
 }
 
 // Returns true if checksum is equal to the XOR of all 8-byte words in log entry block
-bool valid_log_entry_block(log_entry_block_header *block, uint64_t checksum) {
+bool valid_log_entry_block(void *block, uint64_t checksum) {
         return checksum == checksum_log_entry_block(block);
 }
 
@@ -106,13 +106,13 @@ uint32_t get_tail(int fd) {
                 runner += 1;
 
                 // read entire 4KB block in
-                read(fd, block, LOG_ENTRY_BLOCK);
+                fprintf(stderr, "Read 4KB block: %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK));
                 // extract log entry block header
                 memcpy(new, block, LOG_ENTRY_HEADER);
 
                 //TODO: somewhere here play the log forward?
                 play_log_forward(block, new->n_entries);
-        } while(valid_log_entry_block(block, new->checksum) && new->n_entries == N_ENTRIES && new->generation == generation);
+        } while(valid_log_entry_block(block, new->checksum) && new->n_entries == N_ENTRIES && new->generation == generation && runner < N_ENTRIES);
         fprintf(stderr, "Tail was set to %" PRIu32 "", runner);
         return runner;
 }
@@ -126,15 +126,17 @@ bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
         char *block = mmap(NULL, LOG_ENTRY_BLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
         // go to correct block
         lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
-        read(fd, block, LOG_ENTRY_BLOCK);
-        if (tail == )
+        fprintf(stderr, "Read 4KB block: %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK));
+	
+	// if log full
+	if (tail == N_ENTRIES - 1) return false;
         // 3 cases: fits in tail, need to move tail to next block, or out of space!
         return true;
 }
 
 // Plays forward all 20B entries present in block
 void play_log_forward(char *block, uint32_t entries) {
-        char *tmp = block + LOG_ENTRY_BLOCK_HEADER;
+        char *tmp = block + LOG_ENTRY_HEADER;
         log_entry *new = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
         for (uint32_t i = 0; i < entries; i++) {
                 memcpy(new, tmp + i * LOG_ENTRY, LOG_ENTRY);
