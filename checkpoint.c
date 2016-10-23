@@ -12,6 +12,7 @@
 
 #include "headers.h"
 
+
 // Global in-memory variables
 uint32_t generation;  // in-memory generation number
 uint32_t tail;        // in-memory tail of the log
@@ -83,6 +84,7 @@ bool format_superblock(int fd) {
 	}
 	generation = sup->generation;
 	if (write_superblock(fd, sup) != SUPERBLOCK) return false;
+	return true;
 }
 
 // Reads the superblock, checks if it is valid, and returns true upon success
@@ -114,6 +116,51 @@ bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
 	return true;
 }
 
+checkpoint_area *get_checkpoint(int fd){
+	lseek(fd, LOG_SIZE, SEEK_SET);
+	checkpoint_area *new = mmap(NULL, CHECKPOINT_AREA, 
+		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+	if (read(fd, &(new->nsize), 8) != 8) return NULL;
+	if (read(fd, &(new->esize), 8) != 8) return NULL;
+	if (read(fd, new->nodes, CHECKPOINT_NODE * new->nsize) 
+		!= CHECKPOINT_NODE * new->nsize) {
+		return NULL;
+	}
+	if (read(fd, new->edges, CHECKPOINT_EDGE * new->esize) 
+		!= CHECKPOINT_EDGE * new->esize) {
+		return NULL;
+	}
+
+	// introduce some check here
+	return new;
+}
+
+bool write_cp(int fd, checkpoint_area *new){
+	lseek(fd, LOG_SIZE, SEEK_SET);
+	// add debug line
+	int i;
+	if (write(fd, &(new->nsize), 8) != 8) return false;
+	if (write(fd, &(new->esize), 8) != 8) return false;
+	if (write(fd, new->nodes, CHECKPOINT_NODE * new->nsize) 
+		!= CHECKPOINT_NODE * new->nsize) {
+		return false;
+	}
+	if (write(fd, new->edges, CHECKPOINT_EDGE * new->esize) 
+		!= CHECKPOINT_EDGE * new->esize) {
+		return false;
+	}
+	return true;
+}
+
+int docheckpoint(int fd, checkpoint_area *new){
+	// make sure its not too big to checkpoint
+	checkpoint_area* old = get_checkpoint(fd);
+	if (old == NULL) return false;
+
+	return write_cp(fd, new);
+
+
+}
 /*
 // FOR TESTING PURPOSES ONLY
 int main(int argc, char** argv) {

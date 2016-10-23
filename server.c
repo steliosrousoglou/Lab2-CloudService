@@ -18,12 +18,49 @@ extern vertex_map map;// hashtable storing the graph
 extern uint32_t generation;  // in-memory generation number
 extern uint32_t tail;        // in-memory tail of the log
 
+int fd;
+
 // Responds to given connection with code and length bytes of body
 static void respond(struct mg_connection *c, int code, const int length, const char* body) {
   mg_send_head(c, code, length, "Content-Type: application/json");
   mg_printf(c, "%s", body);
 }
 
+//testing
+
+void printflatgraph(checkpoint_area* flat_graph){
+
+  printf("nodes: %llu\n", flat_graph->nsize);
+  printf("edges: %llu\n", flat_graph->esize);
+  int i;
+  printf("%s\n", "nodes in graph:" );
+  for(i=0; i<flat_graph->nsize; i++) {
+    printf("%llu\n", flat_graph->nodes[i]); 
+  }
+  printf("%s\n", "edges in graph:" );
+  for(i = 0; i < flat_graph->esize; i++) {
+    printf("%llu, %llu\n", flat_graph->edges[i].a, flat_graph->edges[i].b); 
+  }
+
+
+}
+
+void makefg(){
+  checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
+  int nsize = map.nsize;
+  int esize = map.esize;
+      // check to make sure it can fit
+
+  uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
+  mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
+  flat_graph->nsize = nsize;
+  flat_graph->esize = esize;
+  flat_graph->nodes = nodes;
+  flat_graph->edges = edges;
+
+  make_checkpoint(flat_graph);
+  printflatgraph(flat_graph);
+}
 // Respond with bad request
 void badRequest(struct mg_connection *c) {
   respond(c, 400, 0, "");
@@ -313,6 +350,34 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
         }
       }
     }
+    else if(!strncmp(hm->uri.p, "/api/v1/checkpoint", hm->uri.len)) {
+      // body does not contain expected key
+      // TODO
+      if(0) {
+        badRequest(c);
+        return;
+      }
+
+      checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
+      int nsize = map.nsize;
+      int esize = map.esize;
+      // check to make sure it can fit
+
+      uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
+      mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
+
+      flat_graph->nsize = nsize;
+      flat_graph->esize = esize;
+      flat_graph->nodes = nodes;
+      flat_graph->edges = edges;
+
+      make_checkpoint(flat_graph);
+    
+      
+      docheckpoint(fd, flat_graph);
+      
+      respond(c, 200, 0, "");  
+    } 
     else {
       respond(c, 400, 0, "");
     }
@@ -339,7 +404,7 @@ int main(int argc, char** argv) {
   const char *s_http_port = argv[(format? 2 : 1)];
   const char *devfile = argv[(format? 3 : 2)];
 
-  int fd = open(devfile, O_RDWR);
+  fd = open(devfile, O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Unable to open %s. Abort.\n", devfile);
     return 1;
@@ -347,10 +412,16 @@ int main(int argc, char** argv) {
   // ensure <port> is a number
   struct mg_mgr mgr;
   struct mg_connection *c;
+// pass in void pointer
+
 
   mg_mgr_init(&mgr, NULL);
   c = mg_bind(&mgr, s_http_port, ev_handler);
   mg_set_protocol_http_websocket(c);
+
+  map.nsize = 0;
+  map.esize = 0;
+  map.table = malloc(SIZE * sizeof(vertex*));
 
   // Format option
   if (format) {
@@ -365,15 +436,16 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Normal startup failed. Abort\n");
         return 1;
       } else {
-	// TODO: Alex reads the graph from checkpoint into memory
+        checkpoint_area *loaded = get_checkpoint(fd);
+        buildmap(loaded);
+        // TODO: add in logged operations to map
       }
   }
 
   // initialize global hashtable "map"
-  map.size = 0;
-  map.table = malloc(SIZE * sizeof(vertex*));
+ 
   for (int i = 0; i < SIZE; i++) (map.table)[i] = NULL;
-
+  // testfunction();
     for (;;) {
       mg_mgr_poll(&mgr, 1000);
     }

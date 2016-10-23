@@ -58,8 +58,9 @@ bool add_vertex(uint64_t id) {
 	new->next = table[hash];
 	new->head = NULL;
 	new->path = -1;
+	new->visited = 0;
 	table[hash] = new;
-	map.size += 1;
+	map.nsize += 1;
 	return true;
 }
 
@@ -67,7 +68,6 @@ bool add_vertex(uint64_t id) {
 void fix_edges(vertex *out){
 	edge *head = out->head;
 	uint64_t id = out->id;
-	vertex *tmp;
 	while(head){
 		LL_delete(&((ret_vertex(head->b))->head), id);
 		head=head->next;
@@ -110,7 +110,7 @@ bool remove_vertex(uint64_t id) {
 	vertex** table = map.table;
 
 	if(delete_vertex(&(table[hash]), id)) {
-		map.size -= 1;
+		map.nsize -= 1;
 		return true;
 	} else return false;
 }
@@ -218,6 +218,7 @@ int add_edge(uint64_t a, uint64_t b) {
 
 	LL_insert(&(v1->head), b);
 	LL_insert(&(v2->head), a);
+	map.esize += 1;
 	return 200;
 }
 
@@ -241,7 +242,7 @@ bool remove_edge(uint64_t a, uint64_t b) {
 
 	// can't remove edge
 	if(!v1 || !v2) return false;
-
+	map.esize -= 1;
 	return (LL_delete(&(v1->head), b) && LL_delete(&(v2->head), a));
 }
 
@@ -365,4 +366,71 @@ uint64_t *get_neighbors(uint64_t id, int* n){
 	}
 	*n = size;
 	return neighbors;
+}
+
+
+bool is_unvisited(uint64_t id){
+	if ((ret_vertex(id))->visited){
+		return false;
+	}
+	return true;
+
+}
+int do_edge_mem(mem_edge *edges, vertex *index, int edgei){
+	edge *head = index->head;
+	uint64_t id = index->id;
+	while(head){
+		if (is_unvisited(head->b)){
+			edges[edgei].a = id;
+			edges[edgei].b = head->b;
+			edgei++;
+		}
+		head = head->next;
+	}
+	return edgei;
+
+}
+
+int make_checkpoint(checkpoint_area * flat_graph){
+	int nodei = 0;
+	int edgei = 0;
+	int bin;
+	vertex** table = map.table;
+	vertex *index;
+	for (bin=0; bin < SIZE; bin++){
+		index = table[bin];
+		while(index !=NULL){
+			edgei = do_edge_mem(flat_graph->edges, index, edgei);
+			flat_graph->nodes[nodei]=index->id;
+			nodei++;
+			index->visited=1;
+			index=index->next;	
+		}
+	}
+
+	// might be faster just to correct the ones we know exist, idk
+	for (bin=0; bin < SIZE; bin++){
+		index = table[bin];
+		while(index !=NULL){
+			index->visited=0;
+			index=index->next;	
+		}
+	}
+	return 1;
+}
+
+int buildmap(struct checkpoint_area * loaded){
+	int nodenum = loaded->nsize;
+	int edgenum = loaded->esize;
+	int i;
+	for (i=0; i<nodenum; i++){
+		add_vertex(loaded->nodes[i]);
+	}
+	for (i=0; i<edgenum; i++){
+		add_edge(loaded->edges[i].a, loaded->edges[i].b);
+	}
+	if (map.nsize != nodenum || map.esize != edgenum){
+		return 0;
+	}
+	return 1;
 }
