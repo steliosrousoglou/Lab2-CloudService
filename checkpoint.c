@@ -1,21 +1,10 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#include <getopt.h>
-#include <sys/mman.h>
-#include <inttypes.h>
-
 #include "headers.h"
-
 
 // Global in-memory variables
 uint32_t generation;  // in-memory generation number
 uint32_t tail;        // in-memory tail of the log
+
+extern int fd;
 
 // Returns malloced superblock read from disk
 superblock* get_superblock(int fd) {
@@ -68,6 +57,11 @@ bool valid_superblock(superblock *block, uint64_t checksum) {
 	return checksum == checksum_superblock(block);
 }
 
+// Returns true if checksum is equal to the XOR of all 8-byte words in log entry block
+bool valid_log_entry_block(log_entry_block_header *block, uint64_t checksum) {
+        return checksum == checksum_log_entry_block(block);
+}
+
 // Implements -f (fomrat) functionality, return true on success
 bool format_superblock(int fd) {
 	superblock* sup = get_superblock(fd);
@@ -101,19 +95,64 @@ bool normal_startup(int fd) {
 
 // Returns number of log entry block that should be written next
 uint32_t get_tail(int fd) {
-	//TODO
-	return 0;
+        uint32_t runner = -1;
+        log_entry_block_header *new = mmap(NULL, LOG_ENTRY_HEADER, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+        char *block = mmap(NULL, LOG_ENTRY_BLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+        
+        // move to end of superblock
+        lseek(fd, SUPERBLOCK, SEEK_SET);
+        do {
+                // first time through, defaults to 0
+                runner += 1;
+
+                // read entire 4KB block in
+                read(fd, block, LOG_ENTRY_BLOCK);
+                // extract log entry block header
+                memcpy(new, block, LOG_ENTRY_HEADER);
+
+                //TODO: somewhere here play the log forward?
+                play_log_forward(block, new->n_entries);
+        } while(valid_log_entry_block(block, new->checksum) && new->n_entries == N_ENTRIES && new->generation == generation);
+        fprintf(stderr, "Tail was set to %" PRIu32 "", runner);
+        return runner;
 }
 
 // Appends most recent mutating command to log, returns true on success
 bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
-	log_entry *new = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-	new->opcode = opcode;
-	new->node_a_id = arg1;
-	new->node_b_id = arg2;
+        log_entry *new = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+        new->opcode = opcode;
+        new->node_a_id = arg1;
+        new->node_b_id = arg2;
+        char *block = mmap(NULL, LOG_ENTRY_BLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+        // go to correct block
+        lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
+        read(fd, block, LOG_ENTRY_BLOCK);
+        if (tail == )
+        // 3 cases: fits in tail, need to move tail to next block, or out of space!
+        return true;
+}
 
-	// TODO
-	return true;
+// Plays forward all 20B entries present in block
+void play_log_forward(char *block, uint32_t entries) {
+        char *tmp = block + LOG_ENTRY_BLOCK_HEADER;
+        log_entry *new = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+        for (uint32_t i = 0; i < entries; i++) {
+                memcpy(new, tmp + i * LOG_ENTRY, LOG_ENTRY);
+                switch(new->opcode) {
+                        case ADD_NODE:
+                                add_vertex(new->node_a_id);
+                                break;
+                        case ADD_EDGE:
+                                add_edge(new->node_a_id, new->node_b_id);
+                                break;
+                        case REMOVE_NODE:
+                                remove_vertex(new->node_a_id);
+                                break;
+                        case REMOVE_EDGE:
+                                remove_edge(new->node_a_id, new->node_b_id);
+                }
+                fprintf(stderr, "op: %" PRIu32 ",node a: %" PRIu64 ", node b (only for 1 and 3): %" PRIu64 "\n", new->opcode, new->node_a_id, new->node_b_id);
+        }
 }
 
 checkpoint_area *get_checkpoint(int fd){

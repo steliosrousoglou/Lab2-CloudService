@@ -12,12 +12,14 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/mman.h>
+#include <inttypes.h>
 
 /*
 	Hashtable API prototypes
@@ -147,9 +149,9 @@ typedef struct superblock {
 
 // Definition of a 20B log entry
 typedef struct log_entry {
-	uint32_t opcode;
         uint64_t node_a_id;
         uint64_t node_b_id;
+        uint32_t opcode;
 } log_entry;
 
 // Definition of a 4KB log entry block
@@ -169,6 +171,8 @@ uint64_t checksum_log_entry_block(void *bytes);
 size_t write_superblock(int fd, superblock* sup);
 // Returns true if checksum is equal to the XOR of all 8-byte words in superblock
 bool valid_superblock(superblock *block, uint64_t checksum);
+// Returns true if checksum is equal to the XOR of all 8-byte words in log entry block
+bool valid_log_entry_block(log_entry_block_header *block, uint64_t checksum);
 // Implements -f (fomrat) functionality, returns true upon success
 bool format_superblock(int fd);
 // Reads the superblock, checks if it is valid, returns true upon success
@@ -177,6 +181,8 @@ bool normal_startup(int fd);
 uint32_t get_tail(int fd);
 // Appends most recent mutating command to log, returns true on success
 bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2);
+// Plays forward all 20B entries present in block
+void play_log_forward(char *block, uint32_t entries);
 
 #define CHECKPOINT_HEADER (16)
 #define CHECKPOINT_NODE (8)
