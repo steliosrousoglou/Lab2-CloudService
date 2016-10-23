@@ -132,7 +132,8 @@ uint64_t *get_neighbors(uint64_t id, int* n);
 #define LOG_ENTRY_HEADER (16)
 #define LOG_ENTRY (20)
 #define LOG_SIZE (2000000000)
-#define N_ENTRIES (499999)
+#define N_ENTRIES (199)
+#define MAX_BLOCKS (499999)
 
 // op-codes for log entries
 #define ADD_NODE (0)

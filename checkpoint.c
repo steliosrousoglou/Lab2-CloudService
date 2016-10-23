@@ -112,24 +112,34 @@ uint32_t get_tail(int fd) {
 
                 //TODO: somewhere here play the log forward?
                 play_log_forward(block, new->n_entries);
-        } while(valid_log_entry_block(block, new->checksum) && new->n_entries == N_ENTRIES && new->generation == generation && runner < N_ENTRIES);
+        } while(valid_log_entry_block(block, new->checksum) && new->n_entries == N_ENTRIES && new->generation == generation && runner < MAX_BLOCKS - 1);
+
+	if (runner == MAX_BLOCKS - 1 && new->n_entries == N_ENTRIES) runner = MAXBLOCKS;
         fprintf(stderr, "Tail was set to %" PRIu32 "", runner);
         return runner;
 }
 
 // Appends most recent mutating command to log, returns true on success
 bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
-        log_entry *new = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-        new->opcode = opcode;
-        new->node_a_id = arg1;
-        new->node_b_id = arg2;
-        char *block = mmap(NULL, LOG_ENTRY_BLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-        // go to correct block
-        lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
-        fprintf(stderr, "Read 4KB block: %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK));
-	
 	// if log full
-	if (tail == N_ENTRIES - 1) return false;
+        if (tail == MAX_BLOCKS) return false;
+        else {
+		log_entry *entry = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+		log_entry_block_header *header = mmap(NULL, LOG_ENTRY_HEADER, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+		char *block = mmap(NULL, LOG_ENTRY_BLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+
+		new->opcode = opcode;
+		new->node_a_id = arg1;
+		new->node_b_id = arg2;
+
+		// go to correct block
+		lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
+		fprintf(stderr, "Read 4KB block: %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK));
+		// extract log entry block header
+		memcpy(header, block, LOG_ENTRY_HEADER);
+
+		//TODO; write back with extra entry and new size. if new size == 199, increment tail. if tail == 499999 and 
+	}
         // 3 cases: fits in tail, need to move tail to next block, or out of space!
         return true;
 }
