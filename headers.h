@@ -50,12 +50,14 @@ typedef struct vertex {
 	edge* head; 			// linked list of edges
 	struct vertex* next;	// for chaining
 	int path;
+	int visited;
 } vertex;
 
 // Vertex hashtable definition
 typedef struct vertex_map {
 	vertex** table;
-	size_t size;
+	size_t nsize;
+	size_t esize;
 } vertex_map;
 
 // Returns hash value
@@ -127,6 +129,7 @@ uint64_t *get_neighbors(uint64_t id, int* n);
 #define LOG_ENTRY_BLOCK (4000)
 #define LOG_ENTRY_HEADER (16)
 #define LOG_ENTRY (20)
+#define LOG_SIZE (2000000000)
 
 // op-codes for log entries
 #define ADD_NODE (0)
@@ -174,4 +177,30 @@ bool normal_startup(int fd);
 uint32_t get_tail(int fd);
 // Appends most recent mutating command to log, returns true on success
 bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2);
+
+#define CHECKPOINT_HEADER (16)
+#define CHECKPOINT_NODE (8)
+#define CHECKPOINT_EDGE (16)
+#define CHECKPOINT_AREA (8000000000)
+
+// Definition of edge for checkpoint area
+typedef struct mem_edge {
+	uint64_t a;
+	uint64_t b;
+}mem_edge;
+
+// Definition of 8 KB checkpoint area 
+typedef struct checkpoint_area{
+	uint64_t nsize;
+	uint64_t esize;
+	uint64_t *nodes;
+	struct mem_edge *edges;
+}checkpoint_area;
+
+checkpoint_area *get_checkpoint(int fd);
+int make_checkpoint(struct checkpoint_area * flat_graph);
+
+int docheckpoint(int fd, struct checkpoint_area * new);
+
+int buildmap(struct checkpoint_area * loaded);
 
