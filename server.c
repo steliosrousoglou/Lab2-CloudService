@@ -30,27 +30,27 @@ static void respond(struct mg_connection *c, int code, const int length, const c
 
 void printflatgraph(checkpoint_area* flat_graph){
 
-  printf("nodes: %llu\n", flat_graph->nsize);
-  printf("edges: %llu\n", flat_graph->esize);
+  printf("nodes: %" PRIu64 "\n", flat_graph->nsize);
+  printf("edges: %" PRIu64 "\n", flat_graph->esize);
   int i;
   printf("%s\n", "nodes in graph:" );
   for(i=0; i<flat_graph->nsize; i++) {
-    printf("%llu\n", flat_graph->nodes[i]); 
+    printf("%" PRIu64 "\n", flat_graph->nodes[i]); 
   }
   printf("%s\n", "edges in graph:" );
   for(i = 0; i < flat_graph->esize; i++) {
-    printf("%llu, %llu\n", flat_graph->edges[i].a, flat_graph->edges[i].b); 
+    printf("%" PRIu64 ", %" PRIu64 "\n", flat_graph->edges[i].a, flat_graph->edges[i].b); 
   }
 
 
 }
 
-void makefg(){
+checkpoint_area * makefg(){
+  
   checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
   int nsize = map.nsize;
   int esize = map.esize;
       // check to make sure it can fit
-
   uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
   mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
   flat_graph->nsize = nsize;
@@ -58,8 +58,9 @@ void makefg(){
   flat_graph->nodes = nodes;
   flat_graph->edges = edges;
 
-  make_checkpoint(flat_graph);
-  printflatgraph(flat_graph);
+ make_checkpoint(flat_graph);
+ return(flat_graph);
+  // printflatgraph(flat_graph);
 }
 // Respond with bad request
 void badRequest(struct mg_connection *c) {
@@ -150,19 +151,21 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
     const char* arg_id = "node_id";
     const char* arg_a = "node_a_id";
     const char* arg_b = "node_b_id";
-
-    struct json_token* find_id = find_json_token(tokens, arg_id);
-    struct json_token* find_a = find_json_token(tokens, arg_a);
-    struct json_token* find_b = find_json_token(tokens, arg_b);
-
+    struct json_token* find_id;
+    struct json_token* find_a;
+    struct json_token* find_b;
+    if (strncmp(hm->uri.p, "/api/v1/checkpoint", hm->uri.len)){
+    find_id = find_json_token(tokens, arg_id);
+    find_a = find_json_token(tokens, arg_a);
+    find_b = find_json_token(tokens, arg_b);
+    }
     // Sanity check for endpoint length and body not empty
     if (hm->uri.len < 16 || tokens == NULL) {
       badRequest(c);
       return;
     }
-
-    if (!strncmp(hm->uri.p, "/api/v1/add_node", hm->uri.len)) {
-      // body does not contain expected key
+    if (!strncmp(hm->uri.p, "/api/v1/add_node", hm->uri.len)) {     
+    // body does not contain expected key
       if (find_id == 0) {
         badRequest(c);
         return;
@@ -357,7 +360,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
         badRequest(c);
         return;
       }
-
+      // simplify
       checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
       int nsize = map.nsize;
       int esize = map.esize;
@@ -372,10 +375,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
       flat_graph->edges = edges;
 
       make_checkpoint(flat_graph);
-    
-      
       docheckpoint(fd, flat_graph);
-      
+      checkpoint_area *loaded = get_checkpoint(fd);
       respond(c, 200, 0, "");  
     } 
     else {
@@ -422,11 +423,17 @@ int main(int argc, char** argv) {
   map.nsize = 0;
   map.esize = 0;
   map.table = malloc(SIZE * sizeof(vertex*));
+  for (int i = 0; i < SIZE; i++) (map.table)[i] = NULL;
 
-  // Format option
+ // Format option
   if (format) {
     if (format_superblock(fd)) {
       fprintf(stderr, "Successfully formatted superblock\n");
+      checkpoint_area *loaded = get_checkpoint(fd);
+
+      if (loaded != NULL) buildmap(loaded);
+
+
     } else {
       fprintf(stderr, "Failed to format superblock\n");
       return 1;
@@ -437,14 +444,15 @@ int main(int argc, char** argv) {
         return 1;
       } else {
         checkpoint_area *loaded = get_checkpoint(fd);
-        buildmap(loaded);
+        if (loaded != NULL) buildmap(loaded);
         // TODO: add in logged operations to map
       }
   }
 
   // initialize global hashtable "map"
- 
-  for (int i = 0; i < SIZE; i++) (map.table)[i] = NULL;
+
+
+  
   // testfunction();
     for (;;) {
       mg_mgr_poll(&mgr, 1000);
