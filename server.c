@@ -388,7 +388,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
 int main(int argc, char** argv) {
 
   bool format = false; 	// format flag specified?
-
+  fprintf(stderr, "%d %d\n", (int) sizeof(struct mem_edge), (int) sizeof(uint64_t));
   // ensure correct number of arguments
   if (argc != 3 && argc != 4) {
     fprintf(stderr, "Usage: ./cs426_graph_server [-f] <port> <devfile>\n");
@@ -444,14 +444,10 @@ int main(int argc, char** argv) {
       } else {
         checkpoint_area *loaded = get_checkpoint(fd);
         if (loaded != NULL) buildmap(loaded);
+	tail = get_tail();
       }
   }
 
-  // initialize global hashtable "map"
-
-
-  
-  // testfunction();
     for (;;) {
       mg_mgr_poll(&mgr, 1000);
     }

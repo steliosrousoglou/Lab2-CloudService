@@ -85,6 +85,18 @@ bool format_superblock() {
 	return true;
 }
 
+// Writes superblock with incremented generation number upon chckpoint
+bool update_superblock() {
+	superblock* sup = get_superblock();
+        if (sup == NULL) return false;
+
+	sup->generation = sup->generation + 1;
+	fprintf(stderr, "Generation incremented to %d\n", (int) sup->generation);
+	tail = 0;
+	if (write_superblock(sup) != SUPERBLOCK) return false;
+	return true;
+}
+
 // Reads the superblock, checks if it is valid, and returns true upon success
 bool normal_startup() {
 	superblock* sup = get_superblock();
@@ -92,7 +104,6 @@ bool normal_startup() {
 
 	if (valid_superblock(sup, sup->checksum)) {
 		generation = sup->generation;
-		tail = get_tail();
 		fprintf(stderr, "Superblock was valid. Normal startup\n");
 		return true;
 	} else {
@@ -182,7 +193,7 @@ bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
 		}
 		if (write(fd, entry, LOG_ENTRY) != LOG_ENTRY) exit(2);
 		lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
-		if (read(fd, block, LOG_ENTRY_BLOCK)) exit(2);
+		if (read(fd, block, LOG_ENTRY_BLOCK) != LOG_ENTRY_BLOCK) exit(2);
 		header->checksum = checksum_log_entry_block(block);
 		lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
 		if (write(fd, header, LOG_ENTRY_HEADER) != LOG_ENTRY_HEADER) exit(2);
@@ -302,7 +313,7 @@ int docheckpoint(checkpoint_area *new){
 	// ` sure its not too big to checkpoint
 	// checkpoint_area* old = get_checkpoint(fd);
 	// if (old == NULL) return 0;
-
+	update_superblock();
 	return write_cp(fd, new);
 }
 

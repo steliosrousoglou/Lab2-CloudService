@@ -179,6 +179,8 @@ bool valid_log_entry_block(void *block, uint64_t checksum);
 bool format_superblock();
 // Reads the superblock, checks if it is valid, returns true upon success
 bool normal_startup();
+// Writes superblock with incremented generation number upon chckpoint
+bool update_superblock();
 // Returns number of log entry block that should be written next
 uint32_t get_tail();
 // Appends most recent mutating command to log, returns true on success

@@ -215,7 +215,6 @@ int add_edge(uint64_t a, uint64_t b) {
 	if(!v1 || !v2 || a == b) return 400;
 
 	if(LL_contains(&(v1->head), b)) return 204;
-
 	LL_insert(&(v1->head), b);
 	LL_insert(&(v2->head), a);
 	map.esize += 1;
