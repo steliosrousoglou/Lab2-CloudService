@@ -217,53 +217,94 @@ void play_log_forward(char *block, uint32_t entries) {
 		fprintf(stderr, "op: %" PRIu32 ",node a: %" PRIu64 ", node b (only for 1 and 3): %" PRIu64 "\n", new->opcode, new->node_a_id, new->node_b_id);
         }
 }
-/*
+
 checkpoint_area *get_checkpoint(int fd){
 	lseek(fd, LOG_SIZE, SEEK_SET);
-	checkpoint_area *new = mmap(NULL, CHECKPOINT_AREA, 
-		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+	int cpsize=0;
+	uint64_t nsize;
+	uint64_t esize;
+	int i;
+	if (read(fd, &(nsize), 8) != 8) {
+		return NULL;
+	}
+	if (read(fd, &(esize), 8) != 8) {
+		fprintf(stderr, "2\n" );
+		return NULL;
+	}
+	lseek(fd, LOG_SIZE, SEEK_SET);
+	cpsize = CHECKPOINT_HEADER + nsize*CHECKPOINT_NODE 
+		+ esize*CHECKPOINT_EDGE;
+
+	checkpoint_area *new = malloc(sizeof(struct checkpoint_area));
+	uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
+	mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
+	 // mmap(NULL, cpsize, 
+		// PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 	if (read(fd, &(new->nsize), 8) != 8) return NULL;
 	if (read(fd, &(new->esize), 8) != 8) return NULL;
-	if (read(fd, new->nodes, CHECKPOINT_NODE * new->nsize) 
-		!= CHECKPOINT_NODE * new->nsize) {
-		return NULL;
+		
+	for (i=0; i< new->nsize; i++){
+		if (read(fd, &(nodes[i]), CHECKPOINT_NODE) 
+			!= CHECKPOINT_NODE) {
+			return NULL;
+		}
 	}
-	if (read(fd, new->edges, CHECKPOINT_EDGE * new->esize) 
-		!= CHECKPOINT_EDGE * new->esize) {
-		return NULL;
+	
+	for (i=0; i < new->esize; i++){
+		if (read(fd, &(edges[i].a), CHECKPOINT_NODE)  
+			!= CHECKPOINT_NODE) {
+			return NULL;
+		} 
+		if (read(fd, &(edges[i].b), CHECKPOINT_NODE)  
+			!= CHECKPOINT_NODE) {
+			return NULL;
+		} 
 	}
+	new->nodes=nodes;
+	new->edges=edges;
 
 	// introduce some check here
 	return new;
 }
 
-bool write_cp(int fd, checkpoint_area *new){
+int write_cp(int fd, checkpoint_area *new){
 	lseek(fd, LOG_SIZE, SEEK_SET);
+
 	// add debug line
 	int i;
-	if (write(fd, &(new->nsize), 8) != 8) return false;
-	if (write(fd, &(new->esize), 8) != 8) return false;
-	if (write(fd, new->nodes, CHECKPOINT_NODE * new->nsize) 
-		!= CHECKPOINT_NODE * new->nsize) {
-		return false;
+	if (write(fd, &(new->nsize), 8) != 8) return 0;
+	
+	
+	if (write(fd, &(new->esize), 8) != 8) return 0;
+	
+	for (i=0; i< new->nsize; i++){
+		if (write(fd, &((new->nodes)[i]), CHECKPOINT_NODE) 
+			!= CHECKPOINT_NODE) {
+			return 0;
+		} 
 	}
-	if (write(fd, new->edges, CHECKPOINT_EDGE * new->esize) 
-		!= CHECKPOINT_EDGE * new->esize) {
-		return false;
+	
+	for (i=0; i < new->esize; i++){
+		if (write(fd, &(((new->edges)[i]).a), CHECKPOINT_NODE)  
+			!= CHECKPOINT_NODE) {
+			return 0;
+		} 
+		if (write(fd, &(((new->edges)[i]).b), CHECKPOINT_NODE)  
+			!= CHECKPOINT_NODE) {
+			return 0;
+		} 
 	}
-	return true;
+	return 5;
 }
+
 
 int docheckpoint(int fd, checkpoint_area *new){
-	// make sure its not too big to checkpoint
-	checkpoint_area* old = get_checkpoint(fd);
-	if (old == NULL) return false;
+	// ` sure its not too big to checkpoint
+	// checkpoint_area* old = get_checkpoint(fd);
+	// if (old == NULL) return 0;
 
 	return write_cp(fd, new);
-
-
 }
-*/
 
 // Writes whole LOG section (all 2 GB) with 0
 /*
