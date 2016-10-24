@@ -375,7 +375,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
       flat_graph->edges = edges;
 
       make_checkpoint(flat_graph);
-      docheckpoint(fd, flat_graph);
+      docheckpoint(flat_graph);
       checkpoint_area *loaded = get_checkpoint(fd);
       respond(c, 200, 0, "");  
     } 

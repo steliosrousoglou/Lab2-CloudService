@@ -298,7 +298,7 @@ int write_cp(int fd, checkpoint_area *new){
 }
 
 
-int docheckpoint(int fd, checkpoint_area *new){
+int docheckpoint(checkpoint_area *new){
 	// ` sure its not too big to checkpoint
 	// checkpoint_area* old = get_checkpoint(fd);
 	// if (old == NULL) return 0;
