@@ -374,7 +374,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
       make_checkpoint(flat_graph);
     
       
-      docheckpoint(fd, flat_graph);
+      docheckpoint(flat_graph);
       
       respond(c, 200, 0, "");  
     } 
@@ -425,21 +425,22 @@ int main(int argc, char** argv) {
 
   // Format option
   if (format) {
-    if (format_superblock(fd)) {
+    if (format_superblock()) {
       fprintf(stderr, "Successfully formatted superblock\n");
     } else {
       fprintf(stderr, "Failed to format superblock\n");
       return 1;
     }
   } else { // normal startup
-      if (!normal_startup(fd)) {
+      if (!normal_startup()) {
         fprintf(stderr, "Normal startup failed. Abort\n");
         return 1;
       } else {
-        checkpoint_area *loaded = get_checkpoint(fd);
+        checkpoint_area *loaded = get_checkpoint();
         buildmap(loaded);
         // TODO: add in logged operations to map
-      }
+      	// Alex, that happens in normal_startup()!
+	}
   }
 
   // initialize global hashtable "map"
