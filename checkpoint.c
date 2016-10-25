@@ -91,6 +91,7 @@ bool update_superblock() {
         if (sup == NULL) return false;
 
 	sup->generation = sup->generation + 1;
+	generation++;
 	fprintf(stderr, "Generation incremented to %d\n", (int) sup->generation);
 	tail = 0;
 	if (write_superblock(sup) != SUPERBLOCK) return false;
