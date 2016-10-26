@@ -22,7 +22,7 @@ superblock* get_superblock() {
 	lseek(fd, 0, SEEK_SET);
 	superblock* new = mmap(NULL, SUPERBLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 	if (read(fd, new, SUPERBLOCK) != SUPERBLOCK) return NULL;
-	fprintf(stderr, "Reading: generation: %" PRIu32 ", start: %" PRIu32 ", size: %" PRIu32 "\n", new->generation, new->log_start, new->log_size);
+	// fprintf(stderr, "Reading: generation: %" PRIu32 ", start: %" PRIu32 ", size: %" PRIu32 "\n", new->generation, new->log_start, new->log_size);
 	return new;
 }
 
@@ -60,8 +60,7 @@ size_t write_superblock(superblock* sup) {
         lseek(fd, 0, SEEK_SET);
         sup->checksum = checksum_superblock(sup);
 
-	// Debugging
-	fprintf(stderr, "Writing Superblock: generation: %" PRIu32 ", start: %" PRIu32 ", size: %" PRIu32 "\n", sup->generation, sup->log_start, sup->log_size);
+	// fprintf(stderr, "Writing Superblock: generation: %" PRIu32 ", start: %" PRIu32 ", size: %" PRIu32 "\n", sup->generation, sup->log_start, sup->log_size);
 
 	return write(fd, sup, SUPERBLOCK);
 }
@@ -83,12 +82,12 @@ bool format_superblock() {
 
 	if (valid_superblock(sup, sup->checksum)) {
 		sup->generation = sup->generation + 1;
-		fprintf(stderr, "Superblock was valid. Incremented to %d\n", (int) sup->generation);
+		// fprintf(stderr, "Superblock was valid. Incremented to %d\n", (int) sup->generation);
 	} else {
 		sup->generation = 0;
 		sup->log_start = 1;
 		sup->log_size = LOG_SIZE; // unsure if this is meant to be 2GB always but that's what he said in class
-		fprintf(stderr, "Superblock was invalid. Initialized to 0\n");
+		// fprintf(stderr, "Superblock was invalid. Initialized to 0\n");
 	}
 	generation = sup->generation;
 	tail = 0;
@@ -103,7 +102,7 @@ bool update_superblock() {
 
 	sup->generation = sup->generation + 1;
 	generation++;
-	fprintf(stderr, "Generation incremented to %d\n", (int) sup->generation);
+	// fprintf(stderr, "Generation incremented to %d\n", (int) sup->generation);
 	tail = 0;
 	if (write_superblock(sup) != SUPERBLOCK) return false;
 	return true;
@@ -116,10 +115,10 @@ bool normal_startup() {
 
 	if (valid_superblock(sup, sup->checksum)) {
 		generation = sup->generation;
-		fprintf(stderr, "Superblock was valid. Normal startup\n");
+		// fprintf(stderr, "Superblock was valid. Normal startup\n");
 		return true;
 	} else {
-		fprintf(stderr, "Superblock was invalid. Abort\n");
+		// fprintf(stderr, "Superblock was invalid. Abort\n");
 		return false;
 	}
 }
@@ -157,17 +156,17 @@ uint32_t get_tail() {
 
 	//TODO: if wrong generation, write size to be 0 (to make checksum fail)
 	if (!gen) {
-		fprintf(stderr, "Tail stopped at wrong generation, read %d!\n", (int) new->generation);
+		// fprintf(stderr, "Tail stopped at wrong generation, read %d!\n", (int) new->generation);
 		lseek(fd, -LOG_ENTRY_BLOCK, SEEK_CUR);
-		new->n_entries = 0;
+		new->n_entries = 697;
 		if (write(fd, new, LOG_ENTRY_HEADER) != LOG_ENTRY_HEADER) exit(2);
 	}
-	if (!valid) fprintf(stderr, "Tail stopped at invalid log block!\n");
+	// if (!valid) fprintf(stderr, "Tail stopped at invalid log block!\n");
 
 	if (runner == MAX_BLOCKS - 1 && new->n_entries == N_ENTRIES) runner = MAX_BLOCKS;
         
 	// fprintf(stderr, "Tail was set to %" PRIu32 "\n", runner);
- //        fprintf(stderr, "Number of entries in current block is %" PRIu32 "\n", new->n_entries);
+	// fprintf(stderr, "Number of entries in current block is %" PRIu32 "\n", new->n_entries);
 	return runner;
 }
 
@@ -175,7 +174,7 @@ uint32_t get_tail() {
 bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
 	// if log full
         if (tail == MAX_BLOCKS) {
-		fprintf(stderr, "Log segment is FULL!\n");
+		// fprintf(stderr, "Log segment is FULL!\n");
 		return false;
         } else {
 		log_entry *entry = mmap(NULL, LOG_ENTRY, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
@@ -237,7 +236,7 @@ void play_log_forward(char *block, uint32_t entries) {
                                 remove_edge(new->node_a_id, new->node_b_id);
                			break;
 		 }
-	//	fprintf(stderr, "op: %" PRIu32 ",node a: %" PRIu64 ", node b (only for 1 and 3): %" PRIu64 "\n", new->opcode, new->node_a_id, new->node_b_id);
+	// fprintf(stderr, "op: %" PRIu32 ",node a: %" PRIu64 ", node b (only for 1 and 3): %" PRIu64 "\n", new->opcode, new->node_a_id, new->node_b_id);
         }
 }
 
