@@ -8,9 +8,6 @@
  * main, the request handler, and formatting json responses
  */
 
-#include <string.h>
-#include <stdbool.h>
-
 #include "mongoose.h"
 #include "headers.h"
 

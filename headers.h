@@ -8,18 +8,19 @@
  * and structure definitions
  */
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <assert.h>
 #include <errno.h>
-#include <unistd.h>
+#include <fcntl.h>
 #include <getopt.h>
-#include <sys/mman.h>
 #include <inttypes.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /*
 	Hashtable API prototypes

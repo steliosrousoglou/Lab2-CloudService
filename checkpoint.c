@@ -1,3 +1,14 @@
+/*
+ * checkpoint.c 
+ *  
+ * by Stylianos Rousoglou
+ * and Alex Saiontz
+ *
+ * Provides logging and checkpoint
+ * functionality, including normal
+ * startup and format
+ */
+
 #include "headers.h"
 
 // Global in-memory variables
