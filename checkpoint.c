@@ -256,9 +256,11 @@ checkpoint_area *get_checkpoint(int fd){
 	cpsize = CHECKPOINT_HEADER + nsize*CHECKPOINT_NODE 
 		+ esize*CHECKPOINT_EDGE;
 
+	uint64_t *nodes;
+	mem_edge *edges;
 	checkpoint_area *new = malloc(sizeof(struct checkpoint_area));
-	uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
-	mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
+	if (nsize >= 0) {nodes = malloc(sizeof(uint64_t) * nsize);}
+	if (esize >= 0) {edges = malloc(sizeof(struct mem_edge) * esize);}
 	if (read(fd, &(new->nsize), 8) != 8) return NULL;
 	if (read(fd, &(new->esize), 8) != 8) return NULL;
 		
@@ -317,9 +319,10 @@ int write_cp(int fd, checkpoint_area *new){
 
 int clear_checkpoint_area(){
 	lseek(fd, LOG_SIZE, SEEK_SET);
-	int zero = 0;
-	if (write(fd, &(zero), 8) != 8) return 0;
-	if (write(fd, &(zero), 8) != 8) return 0;
+	uint64_t *zero =  malloc(sizeof(uint64_t));
+	zero[0]=0;
+	if (write(fd, zero, 8) != 8) return 0;
+	if (write(fd, zero, 8) != 8) return 0;
 	return 1;
 }
 
