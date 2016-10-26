@@ -191,7 +191,7 @@ void play_log_forward(char *block, uint32_t entries);
 #define CHECKPOINT_HEADER (16)
 #define CHECKPOINT_NODE (8)
 #define CHECKPOINT_EDGE (16)
-#define CHECKPOINT_AREA (8000000000)
+#define CHECKPOINT_AREA (8589934592)
 
 // Definition of edge for checkpoint area
 typedef struct mem_edge {

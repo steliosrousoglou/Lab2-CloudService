@@ -155,8 +155,8 @@ uint32_t get_tail() {
 
 	if (runner == MAX_BLOCKS - 1 && new->n_entries == N_ENTRIES) runner = MAX_BLOCKS;
         
-	fprintf(stderr, "Tail was set to %" PRIu32 "\n", runner);
-        fprintf(stderr, "Number of entries in current block is %" PRIu32 "\n", new->n_entries);
+	// fprintf(stderr, "Tail was set to %" PRIu32 "\n", runner);
+ //        fprintf(stderr, "Number of entries in current block is %" PRIu32 "\n", new->n_entries);
 	return runner;
 }
 
@@ -177,7 +177,7 @@ bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
 
 		// go to correct block
 		lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
-		fprintf(stderr, "Read %d block at position %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK), tail);
+		//fprintf(stderr, "Read %d block at position %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK), tail);
 		// extract log entry block header
 
 		memcpy(header, block, LOG_ENTRY_HEADER);
@@ -226,7 +226,7 @@ void play_log_forward(char *block, uint32_t entries) {
                                 remove_edge(new->node_a_id, new->node_b_id);
                			break;
 		 }
-		fprintf(stderr, "op: %" PRIu32 ",node a: %" PRIu64 ", node b (only for 1 and 3): %" PRIu64 "\n", new->opcode, new->node_a_id, new->node_b_id);
+	//	fprintf(stderr, "op: %" PRIu32 ",node a: %" PRIu64 ", node b (only for 1 and 3): %" PRIu64 "\n", new->opcode, new->node_a_id, new->node_b_id);
         }
 }
 
@@ -240,7 +240,6 @@ checkpoint_area *get_checkpoint(int fd){
 		return NULL;
 	}
 	if (read(fd, &(esize), 8) != 8) {
-		fprintf(stderr, "2\n" );
 		return NULL;
 	}
 	lseek(fd, LOG_SIZE, SEEK_SET);
@@ -250,8 +249,6 @@ checkpoint_area *get_checkpoint(int fd){
 	checkpoint_area *new = malloc(sizeof(struct checkpoint_area));
 	uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
 	mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
-	 // mmap(NULL, cpsize, 
-		// PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 	if (read(fd, &(new->nsize), 8) != 8) return NULL;
 	if (read(fd, &(new->esize), 8) != 8) return NULL;
 		
@@ -275,7 +272,6 @@ checkpoint_area *get_checkpoint(int fd){
 	new->nodes=nodes;
 	new->edges=edges;
 
-	// introduce some check here
 	return new;
 }
 
@@ -311,9 +307,6 @@ int write_cp(int fd, checkpoint_area *new){
 
 
 int docheckpoint(checkpoint_area *new){
-	// ` sure its not too big to checkpoint
-	// checkpoint_area* old = get_checkpoint(fd);
-	// if (old == NULL) return 0;
 	update_superblock();
 	return write_cp(fd, new);
 }
@@ -325,73 +318,4 @@ void format_whole_log(int fd) {
 	int *n = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 	for (int i = 0; i < 524288; i++) write(fd, n, 4096);
 }*/
-/*
-// FOR TESTING PURPOSES ONLY
-int main(int argc, char** argv) {
-	int fd;
-
-	fd = open("/dev/sdb", O_RDWR);
-	if(argc==2 && !strcmp(argv[1], "-f")) format_whole_log(fd);
-
-//	format_superblock(fd);
-	normal_startup(fd);
-	//for(int j=0; j<542280; j++){
-	//	for(int i=0; i<200; i++) add_to_log(fd, i, i, i);
-	//}
-	log_entry_block_header *h = mmap(NULL, LOG_ENTRY_HEADER, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-	h->n_entries = 3;
-	h->generation = 8;
-	lseek(fd, SUPERBLOCK, SEEK_SET);
-	fprintf(stderr, "Just wrote the header: %d\n", (int) write(fd, h, LOG_ENTRY_HEADER));
-*/
-
-/*
-	lseek(fd, SUPERBLOCK, SEEK_SET);
-	char *n = mmap(NULL, LOG_ENTRY_BLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-	read(fd, n, LOG_ENTRY_BLOCK);
-	log_entry_block_header *h = mmap(NULL, LOG_ENTRY_BLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-	memcpy(h, n, LOG_ENTRY_HEADER);
-	h->checksum = 10;//checksum_log_entry_block(n);
-	lseek(fd, SUPERBLOCK, SEEK_SET);
-	write(fd, h, LOG_ENTRY_HEADER);
-
-	lseek(fd, SUPERBLOCK, SEEK_SET);
-        read(fd, n, LOG_ENTRY_BLOCK);
-	memcpy(h, n, LOG_ENTRY_HEADER);
-	if (valid_log_entry_block(n, h->checksum)) fprintf(stderr, "Log entry block VALID!\n");
-	
-*/
-
-
-//h->checksum = checksum_log_entry_block(n);
-	//lseek(fd, SUPERBLOCK, SEEK_SET);
-	//write(fd, h, LOG_ENTRY_HEADER);*/
-	//normal_startup(fd);
-	//for(int i=0; i<400; i++) add_to_log(fd, 6, 6, 6);
-//	format_superblock(fd);	
-//	normal_startup(fd);
-/*	struct superblock *new = mmap(NULL, SUPERBLOCK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-
-	printf("Read: %d\n", (int)read(fd, new, SUPERBLOCK));
-
-	printf("Generation: %lu, checksum: %lu, logstart: %lu, logsize: %lu\n", (unsigned long) new->generation, (unsigned long) new->checksum, (unsigned long) new->log_start, (unsigned long) new->log_size);
-	
-	close(fd);
-	if (valid_superblock(new, new->checksum)) {
-		printf("Valid superblock!");
-	} else {
-		printf("Invalid");
-	}
-	
-	if(sblock.generation == new.generation) printf("Generation\n");
-	if(sblock.checksum == new.checksum) printf("Checksum\n");
-	if(sblock.log_start == new.log_start) printf("Start\n");
-	if(sblock.log_size == new.log_size) printf("Size\n");
-	printf("%lu\n", sizeof(log_entry));
-
-	fd = open("/dev/sdb", O_WRONLY);
-
-	return 0;
-}
-*/
 
