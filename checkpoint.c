@@ -161,7 +161,7 @@ uint32_t get_tail() {
 		new->n_entries = 697;
 		if (write(fd, new, LOG_ENTRY_HEADER) != LOG_ENTRY_HEADER) exit(2);
 	}
-	// if (!valid) fprintf(stderr, "Tail stopped at invalid log block!\n");
+	if (!valid) fprintf(stderr, "Tail stopped at invalid log block!\n");
 
 	if (runner == MAX_BLOCKS - 1 && new->n_entries == N_ENTRIES) runner = MAX_BLOCKS;
         
