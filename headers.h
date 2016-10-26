@@ -208,10 +208,15 @@ typedef struct checkpoint_area{
 	struct mem_edge *edges;
 }checkpoint_area;
 
+// Returns a checkpoint_area struct representing the checkpointed map
 checkpoint_area *get_checkpoint();
+
+// Makes a checkpoint_area struct of the current in-memory map
 int make_checkpoint(struct checkpoint_area * flat_graph);
 
+//Writes checkpoint to disk and updates superblock generation
 int docheckpoint(struct checkpoint_area * new);
 
+// Updates the in-memory map from the checkpointed map stored in disk
 int buildmap(struct checkpoint_area * loaded);
 
