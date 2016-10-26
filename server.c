@@ -28,40 +28,40 @@ static void respond(struct mg_connection *c, int code, const int length, const c
 
 //testing
 
-void printflatgraph(checkpoint_area* flat_graph){
+// void printflatgraph(checkpoint_area* flat_graph){
 
-  printf("nodes: %" PRIu64 "\n", flat_graph->nsize);
-  printf("edges: %" PRIu64 "\n", flat_graph->esize);
-  int i;
-  printf("%s\n", "nodes in graph:" );
-  for(i=0; i<flat_graph->nsize; i++) {
-    printf("%" PRIu64 "\n", flat_graph->nodes[i]); 
-  }
-  printf("%s\n", "edges in graph:" );
-  for(i = 0; i < flat_graph->esize; i++) {
-    printf("%" PRIu64 ", %" PRIu64 "\n", flat_graph->edges[i].a, flat_graph->edges[i].b); 
-  }
+//   printf("nodes: %" PRIu64 "\n", flat_graph->nsize);
+//   printf("edges: %" PRIu64 "\n", flat_graph->esize);
+//   int i;
+//   printf("%s\n", "nodes in graph:" );
+//   for(i=0; i<flat_graph->nsize; i++) {
+//     printf("%" PRIu64 "\n", flat_graph->nodes[i]); 
+//   }
+//   printf("%s\n", "edges in graph:" );
+//   for(i = 0; i < flat_graph->esize; i++) {
+//     printf("%" PRIu64 ", %" PRIu64 "\n", flat_graph->edges[i].a, flat_graph->edges[i].b); 
+//   }
 
 
-}
+// }
 
-checkpoint_area * makefg(){
+// checkpoint_area * makefg(){
   
-  checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
-  int nsize = map.nsize;
-  int esize = map.esize;
-      // check to make sure it can fit
-  uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
-  mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
-  flat_graph->nsize = nsize;
-  flat_graph->esize = esize;
-  flat_graph->nodes = nodes;
-  flat_graph->edges = edges;
+//   checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
+//   int nsize = map.nsize;
+//   int esize = map.esize;
+//       // check to make sure it can fit
+//   uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
+//   mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
+//   flat_graph->nsize = nsize;
+//   flat_graph->esize = esize;
+//   flat_graph->nodes = nodes;
+//   flat_graph->edges = edges;
 
- make_checkpoint(flat_graph);
- return(flat_graph);
-  // printflatgraph(flat_graph);
-}
+//  make_checkpoint(flat_graph);
+//  return(flat_graph);
+//   // printflatgraph(flat_graph);
+// }
 // Respond with bad request
 void badRequest(struct mg_connection *c) {
   respond(c, 400, 0, "");
@@ -389,7 +389,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
 int main(int argc, char** argv) {
 
   bool format = false; 	// format flag specified?
-  fprintf(stderr, "%d %d\n", (int) sizeof(struct mem_edge), (int) sizeof(uint64_t));
+ 
   // ensure correct number of arguments
   if (argc != 3 && argc != 4) {
     fprintf(stderr, "Usage: ./cs426_graph_server [-f] <port> <devfile>\n");

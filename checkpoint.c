@@ -155,8 +155,8 @@ uint32_t get_tail() {
 
 	if (runner == MAX_BLOCKS - 1 && new->n_entries == N_ENTRIES) runner = MAX_BLOCKS;
         
-	fprintf(stderr, "Tail was set to %" PRIu32 "\n", runner);
-        fprintf(stderr, "Number of entries in current block is %" PRIu32 "\n", new->n_entries);
+	// fprintf(stderr, "Tail was set to %" PRIu32 "\n", runner);
+ //        fprintf(stderr, "Number of entries in current block is %" PRIu32 "\n", new->n_entries);
 	return runner;
 }
 
@@ -177,7 +177,7 @@ bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
 
 		// go to correct block
 		lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
-		fprintf(stderr, "Read %d block at position %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK), tail);
+		//fprintf(stderr, "Read %d block at position %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK), tail);
 		// extract log entry block header
 
 		memcpy(header, block, LOG_ENTRY_HEADER);
@@ -318,4 +318,4 @@ void format_whole_log(int fd) {
 	int *n = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 	for (int i = 0; i < 524288; i++) write(fd, n, 4096);
 }*/
-/*
+
