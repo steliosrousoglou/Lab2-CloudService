@@ -407,7 +407,6 @@ int make_checkpoint(checkpoint_area * flat_graph){
 		}
 	}
 
-	// might be faster just to correct the ones we know exist, idk
 	for (bin=0; bin < SIZE; bin++){
 		index = table[bin];
 		while(index !=NULL){

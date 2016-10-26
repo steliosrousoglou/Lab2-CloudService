@@ -354,30 +354,31 @@ static void ev_handler(struct mg_connection *c, int ev, void *p) {
       }
     }
     else if(!strncmp(hm->uri.p, "/api/v1/checkpoint", hm->uri.len)) {
-      // body does not contain expected key
-      // TODO
-      if(0) {
-        badRequest(c);
-        return;
-      }
-      // simplify
-      checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
+      
       int nsize = map.nsize;
       int esize = map.esize;
-      // check to make sure it can fit
+      if ((CHECKPOINT_HEADER + nsize*(CHECKPOINT_NODE) 
+        + esize*(CHECKPOINT_EDGE)) > CHECKPOINT_AREA){
+        respond(c, 507, 0, "");
 
-      uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
-      mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
+      }
+      else {
+        checkpoint_area *flat_graph= malloc(sizeof(struct checkpoint_area));
+    
 
-      flat_graph->nsize = nsize;
-      flat_graph->esize = esize;
-      flat_graph->nodes = nodes;
-      flat_graph->edges = edges;
+        uint64_t *nodes = malloc(sizeof(uint64_t) * nsize);
+        mem_edge *edges = malloc(sizeof(struct mem_edge) * esize);
 
-      make_checkpoint(flat_graph);
-      docheckpoint(flat_graph);
-      checkpoint_area *loaded = get_checkpoint(fd);
-      respond(c, 200, 0, "");  
+        flat_graph->nsize = nsize;
+        flat_graph->esize = esize;
+        flat_graph->nodes = nodes;
+        flat_graph->edges = edges;
+
+        make_checkpoint(flat_graph);
+        docheckpoint(flat_graph);
+        checkpoint_area *loaded = get_checkpoint(fd);
+        respond(c, 200, 0, ""); 
+      } 
     } 
     else {
       respond(c, 400, 0, "");
@@ -430,9 +431,7 @@ int main(int argc, char** argv) {
     if (format_superblock()) {
       fprintf(stderr, "Successfully formatted superblock\n");
       checkpoint_area *loaded = get_checkpoint(fd);
-
       if (loaded != NULL) buildmap(loaded);
-
     } else {
       fprintf(stderr, "Failed to format superblock\n");
       return 1;
@@ -444,7 +443,7 @@ int main(int argc, char** argv) {
       } else {
         checkpoint_area *loaded = get_checkpoint(fd);
         if (loaded != NULL) buildmap(loaded);
-	tail = get_tail();
+	      tail = get_tail();
       }
   }
 
