@@ -391,6 +391,7 @@ int main(int argc, char** argv) {
   if (format) {
     if (format_superblock()) {
       fprintf(stderr, "Successfully formatted superblock\n");
+      clear_checkpoint_area();
     } else {
       fprintf(stderr, "Failed to format superblock\n");
       return 1;

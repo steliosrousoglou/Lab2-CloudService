@@ -220,3 +220,5 @@ int docheckpoint(struct checkpoint_area * new);
 // Updates the in-memory map from the checkpointed map stored in disk
 int buildmap(struct checkpoint_area * loaded);
 
+// effectively clears the checkpoint area on a format
+int clear_checkpoint_area();

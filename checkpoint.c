@@ -315,6 +315,13 @@ int write_cp(int fd, checkpoint_area *new){
 	return 5;
 }
 
+int clear_checkpoint_area(){
+	lseek(fd, LOG_SIZE, SEEK_SET);
+	int zero = 0;
+	if (write(fd, &(zero), 8) != 8) return 0;
+	if (write(fd, &(zero), 8) != 8) return 0;
+	return 1;
+}
 
 int docheckpoint(checkpoint_area *new){
 	update_superblock();
