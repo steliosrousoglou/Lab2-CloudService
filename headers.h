@@ -43,14 +43,14 @@ typedef struct queue{
 
 // Edge node definition
 typedef struct edge {
-	uint64_t b;				// adjacent vertex
-	struct edge* next;		// for chaining
+	uint64_t b;		// adjacent vertex
+	struct edge* next;	// for chaining
 } edge;
 
 // Vertex node definition
 typedef struct vertex {
-	uint64_t id;			// unique id of vertex
-	edge* head; 			// linked list of edges
+	uint64_t id;		// unique id of vertex
+	edge* head; 		// linked list of edges
 	struct vertex* next;	// for chaining
 	int path;
 	int visited;
