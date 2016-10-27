@@ -31,7 +31,7 @@ uint64_t checksum_superblock(void *bytes) {
 	int i;
 	uint64_t sum = 0;
 	// skip checksum
-	unsigned int *block = bytes;
+	unsigned long *block = bytes;
 	block++;	// skip checksum (first 8 bytes)
 
 	// for all 8-byte words in block
@@ -45,7 +45,7 @@ uint64_t checksum_log_entry_block(void *bytes) {
 	int i;
 	uint64_t sum = 0;
 	// skip checksum
-	unsigned int *block = bytes;
+	unsigned long *block = bytes;
 	block++;	// skip checksum (first 8 bytes)
 
 	// for all 8-byte words in block
