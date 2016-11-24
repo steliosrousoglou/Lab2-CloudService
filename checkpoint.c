@@ -187,7 +187,7 @@ bool add_to_log(uint32_t opcode, uint64_t arg1, uint64_t arg2) {
 
 		// go to correct block
 		lseek(fd, SUPERBLOCK + tail * LOG_ENTRY_BLOCK, SEEK_SET);
-		//fprintf(stderr, "Read %d block at position %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK), tail);
+		fprintf(stderr, "Read %d block at position %d\n", (int) read(fd, block, LOG_ENTRY_BLOCK), tail);
 		// extract log entry block header
 
 		memcpy(header, block, LOG_ENTRY_HEADER);
