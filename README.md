@@ -32,14 +32,12 @@ In the command line, accept an additional parameter specifying the device file i
 ```sh
 $ ./cs426_graph_server <port> <devfile>
 ```
-**Note:** To find the disk you add, simply use command `lsblk` to check all of the disks in your vm. Typically, if you follow the above google cloud instruction to create your vm. The disk serving as checkpoint disk is /dev/sdb. To get the permission to open the disk a file and write to it. You need to change the access permisson of this disk using `chmod`.      
 
 Also, support a -f flag that formats/initializes a new deployment (i.e. writes a fresh version of the superblock):
 
 ```sh
 $ ./cs426_graph_server -f <port> <devfile>
 ```
-**Note:**  As the disk you add is initialized with random bits, so you need to first to format this disk by yourself.
 
 ## Protocol Format ##
 
@@ -70,5 +68,3 @@ Each 4KB log entry block will have:
 `...`
 
 Each log entry will have a 4-byte opcode (0 for `add_node`, 1 for `add_edge`, 2 for `remove_node`, 3 for `remove_edge`) and two 64-bit node IDs (only one of which is used for `add_node` and `remove_node`).
-
-Note: the checksum can fail (i.e. say the block is valid when the block is actually invalid) for a small number of random bit patterns. Unfortunately the all-zero case -- which is a common bit pattern for unwritten blocks on disk -- happens to one where the checksum fails. To get around this, either write a constant 'magic number' in each block (just a constant number in each valid block that ensures that all-zeros is not a valid block), or add a constant value to the checksum function (i.e., the checksum is the XOR of all previous words plus some fixed value).
